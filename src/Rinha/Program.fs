@@ -42,8 +42,8 @@ module Persistence =
           saldo = rd.ReadInt32 "amount" }
 
     let balanceDataReader (rd: IDataReader) : ExtratoSaldoResponse =
-        { limite = rd.ReadInt32 "overdraft_limit"
-          saldo = rd.ReadInt32 "amount"
+        { saldo = rd.ReadInt32 "amount"
+          limite = rd.ReadInt32 "overdraft_limit"
           dataExtrato = DateTime.Now }
 
     let tipoMapper =
@@ -173,7 +173,7 @@ let main args =
         :> IConfiguration
 
     webHost args {
-        add_service (_.AddNpgsqlDataSource(config.GetConnectionString("DefaultConnection")))
+        add_service (_.AddNpgsqlDataSource(config.GetConnectionString("Default")))
 
         endpoints
             [ post "/clientes/{id}/transacoes" Controller.transaction

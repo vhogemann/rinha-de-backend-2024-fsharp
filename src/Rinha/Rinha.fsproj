@@ -21,5 +21,6 @@
       <Link>.dockerignore</Link>
     </Content>
     <Content Include="Dockerfile" />
+    <Content Include="TestRequests\GetBalance.http" />
   </ItemGroup>
 </Project>

@@ -43,3 +43,10 @@ BEGIN
     VALUES (a_client_id, w_amount, 'WITHDRAWAL', NOW(), w_description);
 END;
 $$ LANGUAGE plpgsql;
+
+INSERT INTO balance (client_id, amount, overdraft_limit) VALUES 
+    (1, 0, 100000),
+    (2, 0, 80000),
+    (3, 0, 1000000),
+    (4, 0, 10000000),
+    (5, 0, 500000);
