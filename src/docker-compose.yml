@@ -5,6 +5,8 @@ services:
     #image: vhogemann/rinha-de-backend-2023-fsharp:latest
     build: Rinha
     hostname: api1
+    environment:
+        - ASPNETCORE_ENVIRONMENT=Production
     depends_on:
       - postgres
     expose:
@@ -22,6 +24,8 @@ services:
     #image: vhogemann/rinha-de-backend-2023-fsharp:latest
     build: Rinha
     hostname: api2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
     depends_on:
       - postgres
     expose:

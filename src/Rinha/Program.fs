@@ -11,6 +11,10 @@ open Microsoft.Extensions.DependencyInjection
 open Npgsql
 
 module Model =
+    
+    let options = JsonSerializerOptions()
+    options.PropertyNamingPolicy <- JsonNamingPolicy.SnakeCaseLower
+    
     type TransacaoRequest =
         { valor: int
           tipo: string
@@ -38,8 +42,8 @@ module Persistence =
     open Model
 
     let transacaoResposneDataReader (rd: IDataReader) : TransacaoResponse =
-        { limite = rd.ReadInt32 "overdraft_limit"
-          saldo = rd.ReadInt32 "amount" }
+         { saldo = rd.ReadInt32 "amount" 
+           limite = rd.ReadInt32 "overdraft_limit" }
 
     let balanceDataReader (rd: IDataReader) : ExtratoSaldoResponse =
         { saldo = rd.ReadInt32 "amount"
@@ -124,16 +128,24 @@ module Persistence =
 module Controller =
     open Model
 
-    let optionToNotFound (res: 'a option) =
+    let optionToResponse (res: 'a option) =
         match res with
-        | Some x -> Response.ofJson x
+        | Some x -> Response.ofJsonOptions options x
         | None -> Response.withStatusCode 404 >> Response.ofEmpty
 
+    let deserialize ctx = task {
+        try
+            let! obj = Request.getJsonOptions options ctx
+            return Ok obj
+        with ex ->
+            return Error ex
+        }
+    
     let balance =
         Services.inject<NpgsqlConnection> (fun dbconn ->
             fun ctx ->
                 task {
-                    let clientId = (Request.getRoute ctx).GetString "id" |> int
+                    let clientId = (Request.getRoute ctx).GetInt "id" |> int
 
                     let! mayBeSaldo = Persistence.getBalance dbconn clientId
                     let! transacoes = Persistence.getTransactions dbconn clientId
@@ -143,35 +155,37 @@ module Controller =
                         |> Option.map (fun saldo ->
                             { saldo = saldo
                               transacoes = transacoes })
+                        |> optionToResponse <| ctx
                 })
 
     let transaction =
         Services.inject<NpgsqlConnection> (fun dbconn ->
             fun ctx ->
                 task {
-                    let client_id = (Request.getRoute ctx).GetString "id"
-                    let! json = Request.getBodyString ctx
-                    let request = json |> JsonSerializer.Deserialize<TransacaoRequest>
-
+                    let client_id = (Request.getRoute ctx).GetInt "id"
+                    let! request = deserialize ctx
+                    match request with
+                    | Error _ -> return (Response.withStatusCode 400 >> Response.ofPlainText "Bad Request") ctx
+                    | Ok request ->
                     let transaction =
                         match request.tipo with
                         | "c" -> Persistence.deposit // Credito
                         | "d" -> Persistence.withdrawal // Debito
                         | _ -> failwith "Invalid transaction type"
-
-                    let! response = transaction dbconn (int client_id, request.valor, request.descricao)
-                    return response |> optionToNotFound
+                    try 
+                        let! response = transaction dbconn (client_id, request.valor, request.descricao)
+                        return response |> optionToResponse <| ctx
+                    with _ ->
+                        return (Response.withStatusCode 422 >> Response.ofEmpty) ctx
                 })
 
 [<EntryPoint>]
 let main args =
-    let config =
-        ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional = false, reloadOnChange = true)
-            .AddJsonFile("appsettings.Development.json", optional = true, reloadOnChange = true)
-            .Build()
-        :> IConfiguration
-
+    let env = Environment.GetEnvironmentVariable "ASPNETCORE_ENVIRONMENT"
+    let config = configuration [||] {
+        required_json "appsettings.json"
+        optional_json $"appsettings.{env}.json"
+    }
     webHost args {
         add_service (_.AddNpgsqlDataSource(config.GetConnectionString("Default")))
 

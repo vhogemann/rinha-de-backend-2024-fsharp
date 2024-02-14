@@ -1,1 +1,11 @@
-﻿GET https://localhost:5001/clientes/2/extrato
+﻿GET {{host}}/clientes/1/extrato
+
+###
+POST {{host}}/clientes/1/transacoes
+Content-Type: application/json
+
+{
+    "valor": 1,
+    "tipo" : "c",
+    "descricao" : "descricao"
+}
