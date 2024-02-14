@@ -1,4 +1,4 @@
-﻿GET {{host}}/clientes/1/extrato
+﻿GET {{host}}/clientes/5/extrato
 
 ###
 POST {{host}}/clientes/1/transacoes
