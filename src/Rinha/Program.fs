@@ -153,13 +153,15 @@ module Controller =
                     match request with
                     | Error _ -> return (Response.withStatusCode 422 >> Response.ofPlainText "Bad Request") ctx
                     | Ok request ->
-                    let transaction =
-                        match request.tipo with
-                        | "c" -> Persistence.deposit // Credito
-                        | "d" -> Persistence.withdrawal // Debito
-                        | _ -> failwith "Invalid transaction type"
-                    try 
-                        let! response = transaction dbconn (clientId, request.valor, request.descricao)
+                    if request.valor <= 0 || request.descricao.Length > 10 || request.descricao.Length = 0 then
+                        return (Response.withStatusCode 422 >> Response.ofPlainText "Bad Request") ctx
+                    else
+                    try
+                        let! response =
+                            match request.tipo with
+                            | "c" -> Persistence.deposit dbconn (clientId, request.valor, request.descricao) // Credito
+                            | "d" -> Persistence.withdrawal dbconn (clientId, request.valor, request.descricao) // Debito
+                            | _ -> failwith "Invalid transaction type"
                         return response |> optionToResponse <| ctx
                     with _ ->
                         return (Response.withStatusCode 422 >> Response.ofEmpty) ctx
