@@ -28,7 +28,7 @@ module Model =
 
     and ExtratoSaldoResponse =
         { limite: int
-          saldo: int
+          total: int
           dataExtrato: DateTime }
 
     and ExtratoTransacaoResponse =
@@ -46,7 +46,7 @@ module Persistence =
            limite = rd.ReadInt32 "overdraft_limit" }
 
     let balanceDataReader (rd: IDataReader) : ExtratoSaldoResponse =
-        { saldo = rd.ReadInt32 "amount"
+        { total = rd.ReadInt32 "amount"
           limite = rd.ReadInt32 "overdraft_limit"
           dataExtrato = DateTime.Now }
 
