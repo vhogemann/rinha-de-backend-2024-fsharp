@@ -49,4 +49,5 @@ INSERT INTO balance (client_id, amount, overdraft_limit) VALUES
     (2, 0, 80000),
     (3, 0, 1000000),
     (4, 0, 10000000),
-    (5, 0, 500000);
+    (5, 0, 500000),
+    (99, 0, 100000);

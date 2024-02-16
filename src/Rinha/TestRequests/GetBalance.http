@@ -1,11 +1,21 @@
-﻿GET {{host}}/clientes/5/extrato
+﻿GET {{host}}/clientes/99/extrato
 
 ###
-POST {{host}}/clientes/1/transacoes
+POST {{host}}/clientes/99/transacoes
 Content-Type: application/json
 
 {
     "valor": 1,
     "tipo" : "c",
     "descricao" : "descricao"
+}
+
+###
+POST {{host}}/clientes/99/transacoes
+Content-Type: application/json
+
+{
+  "valor": 1,
+  "tipo" : "d",
+  "descricao" : "descricao"
 }

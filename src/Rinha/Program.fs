@@ -11,7 +11,6 @@ open Microsoft.Extensions.DependencyInjection
 open Npgsql
 
 module Model =
-    
     let options = JsonSerializerOptions()
     options.PropertyNamingPolicy <- JsonNamingPolicy.SnakeCaseLower
     
@@ -24,13 +23,11 @@ module Model =
 
     type ExtratoResponse =
         { saldo: ExtratoSaldoResponse
-          transacoes: ExtratoTransacaoResponse list }
-
+          ultimasTransacoes: ExtratoTransacaoResponse list }
     and ExtratoSaldoResponse =
         { limite: int
           total: int
           dataExtrato: DateTime }
-
     and ExtratoTransacaoResponse =
         { valor: int
           tipo: string
@@ -40,16 +37,14 @@ module Model =
 module Persistence =
     open Donald
     open Model
-
+    
     let transacaoResposneDataReader (rd: IDataReader) : TransacaoResponse =
          { saldo = rd.ReadInt32 "amount" 
            limite = rd.ReadInt32 "overdraft_limit" }
-
     let balanceDataReader (rd: IDataReader) : ExtratoSaldoResponse =
         { total = rd.ReadInt32 "amount"
           limite = rd.ReadInt32 "overdraft_limit"
           dataExtrato = DateTime.Now }
-
     let tipoMapper =
         function
         | "DEPOSIT" -> "c"
@@ -66,12 +61,10 @@ module Persistence =
         let sql =
             "CALL withdrawal(@clientId, @amount, @description);
              SELECT amount, overdraft_limit FROM balance WHERE client_id = @clientId;"
-
         let parameters =
             [ "@clientId", sqlInt32 clientId
               "@amount", sqlInt32 amount
               "@description", sqlString description ]
-
         dbconn
         |> Db.newCommand sql
         |> Db.setParams parameters
@@ -81,12 +74,10 @@ module Persistence =
         let sql =
             "CALL deposit(@clientId, @amount, @description);
              SELECT amount, overdraft_limit FROM balance WHERE client_id = @clientId;"
-
         let parameters =
             [ "@clientId", sqlInt32 clientId
               "@amount", sqlInt32 amount
               "@description", sqlString description ]
-
         dbconn
         |> Db.newCommand sql
         |> Db.setParams parameters
@@ -95,7 +86,6 @@ module Persistence =
     let getBalance (dbconn: NpgsqlConnection) (clientId: int) =
         let sql = "SELECT amount, overdraft_limit FROM balance WHERE client_id = @clientId"
         let parameters = [ "@clientId", sqlInt32 clientId ]
-
         dbconn
         |> Db.newCommand sql
         |> Db.setParams parameters
@@ -117,9 +107,7 @@ module Persistence =
                 transaction_date DESC
             LIMIT 10
                 """
-
         let parameters = [ "@clientId", sqlInt32 clientId ]
-
         dbconn
         |> Db.newCommand sql
         |> Db.setParams parameters
@@ -127,7 +115,7 @@ module Persistence =
 
 module Controller =
     open Model
-
+    
     let optionToResponse (res: 'a option) =
         match res with
         | Some x -> Response.ofJsonOptions options x
@@ -146,15 +134,13 @@ module Controller =
             fun ctx ->
                 task {
                     let clientId = (Request.getRoute ctx).GetInt "id" |> int
-
                     let! mayBeSaldo = Persistence.getBalance dbconn clientId
                     let! transacoes = Persistence.getTransactions dbconn clientId
-
                     return
                         mayBeSaldo
                         |> Option.map (fun saldo ->
                             { saldo = saldo
-                              transacoes = transacoes })
+                              ultimasTransacoes = transacoes })
                         |> optionToResponse <| ctx
                 })
 
@@ -162,10 +148,10 @@ module Controller =
         Services.inject<NpgsqlConnection> (fun dbconn ->
             fun ctx ->
                 task {
-                    let client_id = (Request.getRoute ctx).GetInt "id"
+                    let clientId = (Request.getRoute ctx).GetInt "id"
                     let! request = deserialize ctx
                     match request with
-                    | Error _ -> return (Response.withStatusCode 400 >> Response.ofPlainText "Bad Request") ctx
+                    | Error _ -> return (Response.withStatusCode 422 >> Response.ofPlainText "Bad Request") ctx
                     | Ok request ->
                     let transaction =
                         match request.tipo with
@@ -173,7 +159,7 @@ module Controller =
                         | "d" -> Persistence.withdrawal // Debito
                         | _ -> failwith "Invalid transaction type"
                     try 
-                        let! response = transaction dbconn (client_id, request.valor, request.descricao)
+                        let! response = transaction dbconn (clientId, request.valor, request.descricao)
                         return response |> optionToResponse <| ctx
                     with _ ->
                         return (Response.withStatusCode 422 >> Response.ofEmpty) ctx
