@@ -57,6 +57,38 @@ POST {{host}}/clientes/99/transacoes
 Content-Type: application/json
 
 {
+  "valor": null,
+  "tipo" : "x",
+  "descricao" : "descricao"
+}
+
+> {%
+    client.test("Status code is 422", function() {
+        client.assert(response.status === 422, "Response status is not 422");
+    });
+%}
+
+###
+POST {{host}}/clientes/99/transacoes
+Content-Type: application/json
+
+{
+  "valor": 1,
+  "tipo" : null,
+  "descricao" : "descricao"
+}
+
+> {%
+    client.test("Status code is 422", function() {
+        client.assert(response.status === 422, "Response status is not 422");
+    });
+%}
+
+###
+POST {{host}}/clientes/99/transacoes
+Content-Type: application/json
+
+{
   "valor": 1.2,
   "tipo" : "d",
   "descricao" : "descricao"

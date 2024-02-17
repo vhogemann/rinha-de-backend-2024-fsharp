@@ -153,7 +153,7 @@ module Controller =
                     match request with
                     | Error _ -> return (Response.withStatusCode 422 >> Response.ofPlainText "Bad Request") ctx
                     | Ok request ->
-                    if request.valor <= 0 || request.descricao.Length > 10 || request.descricao.Length = 0 then
+                    if request.valor <= 0 || request.descricao = null || request.descricao.Length > 10 || request.descricao.Length = 0 then
                         return (Response.withStatusCode 422 >> Response.ofPlainText "Bad Request") ctx
                     else
                     try
