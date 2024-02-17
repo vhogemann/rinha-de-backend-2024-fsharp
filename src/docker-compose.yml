@@ -2,7 +2,7 @@
 services:
   api1:
     # API - Instância 01
-    #image: vhogemann/rinha-de-backend-2023-fsharp:latest
+    #image: vhogemann/rinha-de-backend-2024-fsharp:latest
     build: Rinha
     hostname: api1
     environment:
@@ -21,7 +21,7 @@ services:
 
   api2:
     # API - Instância 01
-    #image: vhogemann/rinha-de-backend-2023-fsharp:latest
+    #image: vhogemann/rinha-de-backend-2024-fsharp:latest
     build: Rinha
     hostname: api2
     environment:
@@ -74,6 +74,7 @@ services:
       - 9998:5432
     volumes:
       - ./bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
     deploy:
       resources:
         limits:

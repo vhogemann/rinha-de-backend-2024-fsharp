@@ -94,19 +94,11 @@ module Persistence =
     let getTransactions (dbconn: NpgsqlConnection) (clientId: int) =
         let sql =
             """
-            SELECT 
-                amount, 
-                transaction_type, 
-                description, 
-                transaction_date 
-            FROM 
-                transactions 
-            WHERE 
-                client_id = @clientId
-            ORDER BY
-                transaction_date DESC
-            LIMIT 10
-                """
+            SELECT amount, transaction_type, description, transaction_date 
+            FROM transactions 
+            WHERE client_id = @clientId
+            ORDER BY transaction_date DESC LIMIT 10
+            """
         let parameters = [ "@clientId", sqlInt32 clientId ]
         dbconn
         |> Db.newCommand sql
