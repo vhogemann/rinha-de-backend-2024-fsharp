@@ -12,7 +12,7 @@ WORKDIR "/src/"
 RUN dotnet build "Rinha.fsproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Rinha.fsproj" -c Release -o /app/publish /p:UseAppHost=true /p:PublishReadyToRun=true /p:PublishTrimmed=true
+RUN dotnet publish "Rinha.fsproj" -c Release -o /app/publish /p:UseAppHost=false /p:PublishReadyToRun=true
 
 FROM base AS final
 WORKDIR /app

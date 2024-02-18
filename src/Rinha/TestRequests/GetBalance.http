@@ -1,5 +1,12 @@
 ﻿GET {{host}}/clientes/99/extrato
 
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.length > 0, "Response body is empty");
+    });
+%}
+
 ###
 POST {{host}}/clientes/99/transacoes
 Content-Type: application/json
@@ -10,6 +17,13 @@ Content-Type: application/json
     "descricao" : "descricao"
 }
 
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.length > 0, "Response body is empty");
+    });
+%}
+
 ###
 POST {{host}}/clientes/99/transacoes
 Content-Type: application/json
@@ -19,6 +33,13 @@ Content-Type: application/json
   "tipo" : "d",
   "descricao" : "descricao"
 }
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.length > 0, "Response body is empty");
+    });
+%}
 
 ###
 POST {{host}}/clientes/99/transacoes
