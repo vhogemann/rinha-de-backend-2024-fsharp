@@ -35,6 +35,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE PROCEDURE withdrawal(a_client_id INT, w_amount INT, w_description TEXT) AS $$
 BEGIN
+    -- Check if the withdrawal amount is greater than the balance plus the overdraft limit
+    IF w_amount > (SELECT amount + overdraft_limit FROM balance WHERE client_id = a_client_id) THEN
+        RAISE EXCEPTION 'Insufficient funds';
+    END IF;
+    
     UPDATE balance
     SET amount = amount - w_amount
     WHERE client_id = a_client_id;

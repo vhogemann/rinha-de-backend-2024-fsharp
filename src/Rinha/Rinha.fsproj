@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <Content Include="TestRequests\GetBalance.http" />
+    <Compile Include="Model.fs" />
+    <Compile Include="Persistence.fs" />
+    <Compile Include="Controller.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

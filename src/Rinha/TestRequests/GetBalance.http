@@ -46,6 +46,24 @@ POST {{host}}/clientes/99/transacoes
 Content-Type: application/json
 
 {
+  "valor": 1000000,
+  "tipo" : "d",
+  "descricao" : "descricao"
+}
+
+> {%
+    client.test("Status code is 422", function() {
+        client.assert(response.status === 422, "Response status is not 422");
+        client.assert(response.body.length == 0, "Response body is not empty");
+    });
+%}
+
+
+###
+POST {{host}}/clientes/99/transacoes
+Content-Type: application/json
+
+{
   "valor": 1,
   "tipo" : "",
   "descricao" : "descricao"
