@@ -8,7 +8,8 @@ open System.Data
 
 let transacaoResposneDataReader (rd: IDataReader) : TransacaoResponse =
      { saldo = rd.ReadInt32 "amount" 
-       limite = rd.ReadInt32 "overdraft_limit" }
+       limite = rd.ReadInt32 "overdraft_limit"
+       success = rd.ReadBoolean "success"}
 let balanceDataReader (rd: IDataReader) : ExtratoSaldoResponse =
     { total = rd.ReadInt32 "amount"
       limite = rd.ReadInt32 "overdraft_limit"
@@ -27,8 +28,7 @@ let transactionDataReader (rd: IDataReader) : ExtratoTransacaoResponse =
 
 let withdrawal (dbconn: NpgsqlConnection) (clientId: int, amount: int, description: string) =
     let sql =
-        "CALL withdrawal(@clientId, @amount, @description);
-         SELECT amount, overdraft_limit FROM balance WHERE client_id = @clientId;"
+        "SELECT balance as amount, overdraft as overdraft_limit, success FROM withdrawal(@clientId, @amount, @description);"
     let parameters =
         [ "@clientId", sqlInt32 clientId
           "@amount", sqlInt32 amount
@@ -41,7 +41,7 @@ let withdrawal (dbconn: NpgsqlConnection) (clientId: int, amount: int, descripti
 let deposit (dbconn: NpgsqlConnection) (clientId: int, amount: int, description: string) =
     let sql =
         "CALL deposit(@clientId, @amount, @description);
-         SELECT amount, overdraft_limit FROM balance WHERE client_id = @clientId;"
+         SELECT amount, overdraft_limit, true as success FROM balance WHERE client_id = @clientId;"
     let parameters =
         [ "@clientId", sqlInt32 clientId
           "@amount", sqlInt32 amount

@@ -14,6 +14,11 @@ let optionToResponse (res: 'a option) =
     | Some x -> Response.ofJsonOptions options x
     | None -> Response.withStatusCode 404 >> Response.ofEmpty
 
+let transactionToResponse (t:TransacaoResponse option) =
+    match t with
+    | Some x when x.success = true -> Response.ofJsonOptions options x
+    | None -> Response.withStatusCode 404 >> Response.ofEmpty
+
 let deserialize ctx = task {
     try
         let! obj = Request.getJsonOptions options ctx
@@ -61,7 +66,7 @@ let transaction =
                         | "c" -> Persistence.deposit dbconn (clientId, request.valor, request.descricao) // Credito
                         | "d" -> Persistence.withdrawal dbconn (clientId, request.valor, request.descricao) // Debito
                         | _ -> failwith "Invalid transaction type"
-                    return response |> optionToResponse <| ctx
+                    return response |> transactionToResponse <| ctx
                 with _ ->
                     return (Response.withStatusCode 422 >> Response.ofEmpty) ctx
             })

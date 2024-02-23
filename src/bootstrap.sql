@@ -33,19 +33,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE PROCEDURE withdrawal(a_client_id INT, w_amount INT, w_description TEXT) AS $$
+CREATE OR REPLACE FUNCTION withdrawal(a_client_id INT, w_amount INT, w_description TEXT) 
+RETURNS TABLE (balance INT, overdraft INT, success BOOLEAN) AS $$
+DECLARE
+    current_balance INT;
+    current_overdraft_limit INT;
 BEGIN
-    -- Check if the withdrawal amount is greater than the balance plus the overdraft limit
-    IF w_amount > (SELECT amount + overdraft_limit FROM balance WHERE client_id = a_client_id) THEN
-        RAISE EXCEPTION 'Insufficient funds';
+    SELECT amount, overdraft_limit INTO current_balance, current_overdraft_limit FROM balance  WHERE client_id = a_client_id;
+    IF (current_balance + current_overdraft_limit) >= w_amount THEN
+        UPDATE balance
+            SET amount = current_balance - w_amount
+            WHERE client_id = a_client_id;
+        INSERT INTO transactions (client_id, amount, transaction_type, transaction_date, description)
+            VALUES (a_client_id, w_amount, 'WITHDRAWAL', NOW(), w_description);
+        balance := current_balance - w_amount;
+        overdraft := current_overdraft_limit;
+        success := TRUE;
+    ELSE
+        balance := 0;
+        overdraft := 0;
+        success := FALSE;
     END IF;
-    
-    UPDATE balance
-    SET amount = amount - w_amount
-    WHERE client_id = a_client_id;
-
-    INSERT INTO transactions (client_id, amount, transaction_type, transaction_date, description)
-    VALUES (a_client_id, w_amount, 'WITHDRAWAL', NOW(), w_description);
+    RETURN NEXT;
 END;
 $$ LANGUAGE plpgsql;
 

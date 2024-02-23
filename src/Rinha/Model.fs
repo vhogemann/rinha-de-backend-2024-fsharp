@@ -2,6 +2,7 @@
 
 open System
 open System.Text.Json
+open System.Text.Json.Serialization
 
 let options = JsonSerializerOptions()
 options.PropertyNamingPolicy <- JsonNamingPolicy.SnakeCaseLower
@@ -11,7 +12,12 @@ type TransacaoRequest =
       tipo: string
       descricao: string }
 
-type TransacaoResponse = { limite: int; saldo: int }
+type TransacaoResponse = {
+    limite: int
+    saldo: int
+    [<JsonIgnore>]
+    success: bool
+}
 
 type ExtratoResponse =
     { saldo: ExtratoSaldoResponse

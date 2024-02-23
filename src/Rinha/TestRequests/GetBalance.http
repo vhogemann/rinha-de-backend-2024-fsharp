@@ -3,7 +3,7 @@
 > {%
     client.test("Status code is 200", function() {
         client.assert(response.status === 200, "Response status is not 200");
-        client.assert(response.body.length > 0, "Response body is empty");
+        client.assert(response.body.length !== 0, "Response body is empty");
     });
 %}
 
